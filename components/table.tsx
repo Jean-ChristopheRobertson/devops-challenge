@@ -1,5 +1,6 @@
 import { Prisma } from "@/prisma/generated/client";
 import Image from "next/image";
+import { formatEuroPrice } from "../lib/format-currency.js";
 
 type Props = {
   currencies: Prisma.currenciesGetPayload<{
@@ -48,7 +49,7 @@ export default async function Table({ currencies }: Props) {
               </div>
             </div>
             <p className="text-sm font-medium text-gray-800">
-              €{currency.price.toFixed(2)}
+              {formatEuroPrice(currency.price)}
             </p>
           </div>
         ))}

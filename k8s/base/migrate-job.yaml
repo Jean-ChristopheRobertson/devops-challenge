@@ -1,0 +1,20 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prisma-migrate
+  namespace: devops-challenge
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+spec:
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: migrate
+          image: ghcr.io/moonpay/devops-challenge:latest
+          imagePullPolicy: IfNotPresent
+          command: ['pnpm', 'db:migrate']
+          envFrom:
+            - secretRef:
+                name: app-secrets

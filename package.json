@@ -7,6 +7,9 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
+    "lint": "eslint app components lib next.config.ts prisma.config.ts --ext .ts,.tsx,.js,.jsx",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test",
     "dev": "next dev --turbo",
     "build": "next build",
     "db:push": "prisma db push",

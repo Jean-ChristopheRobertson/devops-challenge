@@ -40,3 +40,10 @@ yarn-error.log*
 
 prisma/generated
 .pnpm-store
+
+# terraform / terragrunt
+.terraform
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+.terragrunt-cache

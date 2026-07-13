@@ -15,6 +15,7 @@ Deploy the provided Next.js application in a **production-ready** manner.
 ## :clipboard: Requirements
 
 You should be comfortable with:
+
 1.  **Docker**: Building and running containers.
 2.  **CI/CD & IaC**: Tools like GitHub Actions, Terraform, etc.
 3.  **Orchestration**: Kubernetes (GKE or local).
@@ -25,16 +26,16 @@ You should be comfortable with:
 ### Task 1: Containerize the Application :package:
 
 1.  Write a `Dockerfile` to containerize the application. :whale:
-    *   Ensure it follows best practices for a Next.js application.
+    - Ensure it follows best practices for a Next.js application.
 2.  Build and run the container locally to verify it works. :hammer_and_wrench:
 
 ### Task 2: Deploy the Application :rocket:
 
 1.  Deploy the application to **Kubernetes** (GKE or a local cluster such as kind, minikube, or Docker Desktop).
 2.  Ensure the solution is **as close to production-ready as possible**. Consider aspects like:
-    *   Security
-    *   Scalability
-    *   Reliability
+    - Security
+    - Scalability
+    - Reliability
 3.  Demonstrate that the application is reachable and returns the _Latest Crypto Prices_. :globe_with_meridians:
 
 ## :hourglass_flowing_sand: Time & Expectations
@@ -44,5 +45,49 @@ This is a take-home exercise — complete it on your own time and submit when yo
 ## :robot: AI Usage
 
 If you use AI tools to assist with this challenge, please bring the prompts you used to the interview. The interviewers would like to understand how you arrived at your solution.
+
+## :shipit: Option B Skeleton (Minikube + Terraform/Terragrunt + GitOps)
+
+This repository now includes a deployment skeleton based on:
+
+1. Minikube as the Kubernetes target.
+2. Terraform modules orchestrated by Terragrunt.
+3. Argo CD for GitOps reconciliation.
+4. GitHub Actions for CI and GitOps release automation.
+
+### Included Structure
+
+- `Dockerfile`: multi-stage Next.js production image.
+- `k8s/base`: app manifests (deployment, service, ingress, hpa, pdb, network policy, local postgres, migration job).
+- `k8s/overlays/minikube`: Minikube-specific kustomize overlay.
+- `argocd/applications/devops-challenge.yaml`: Argo CD Application definition.
+- `infra/terraform`: Terraform modules and minikube environment.
+- `infra/environments/minikube/terragrunt.hcl`: Terragrunt entrypoint.
+- `.github/workflows/ci.yml`: build and publish container image to GHCR on `main`.
+- `.github/workflows/gitops-release.yml`: updates image tag in kustomize overlay after successful CI on `main`.
+
+### Local Bootstrap (Skeleton)
+
+```bash
+# 1) Start minikube and enable ingress
+minikube start
+minikube addons enable ingress
+
+# 2) Bootstrap Argo CD + app definition with terragrunt
+cd infra/environments/minikube
+terragrunt init
+terragrunt apply
+
+# 3) Access app
+minikube tunnel
+# Then browse host configured in k8s/overlays/minikube/kustomization.yaml
+```
+
+### Important Notes
+
+1. `argocd/applications/devops-challenge.yaml` intentionally contains a placeholder repository URL. Set it to your fork before running end-to-end.
+2. `k8s/overlays/minikube/secret.yaml` is intentionally plaintext for local demo only. Replace with sealed/external secret management for real production.
+3. CI publishes image `ghcr.io/<owner>/devops-challenge`; ensure package permissions are enabled for your repository.
+4. The Prisma migration job file exists as a skeleton at `k8s/base/migrate-job.yaml` and is not enabled by default in `k8s/base/kustomization.yaml`.
 
 Good luck! :four_leaf_clover:

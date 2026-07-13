@@ -10,3 +10,12 @@ node_modules
 # Ignore .next and .turbo folders
 .next
 .turbo
+
+# Ignore repo files that are not needed to build the runtime image
+.github
+argocd
+infra
+k8s
+README.md
+DEVELOPMENT.md
+ai-prompts.md

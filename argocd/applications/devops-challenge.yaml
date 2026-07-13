@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: devops-challenge
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/REPLACE_WITH_YOUR_USER_OR_ORG/devops-challenge.git
+    targetRevision: main
+    path: k8s/overlays/minikube
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: devops-challenge
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

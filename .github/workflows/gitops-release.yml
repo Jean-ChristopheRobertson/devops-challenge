@@ -1,0 +1,43 @@
+name: gitops-release
+
+on:
+  workflow_run:
+    workflows: [ci]
+    types: [completed]
+
+permissions:
+  contents: write
+
+jobs:
+  update-overlay-tag:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Compute image tag
+        id: vars
+        run: echo "tag=sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
+
+      - name: Update kustomize image tag
+        run: |
+          sed -i -E "s#(name: ).*#\\1ghcr.io/${{ github.repository_owner }}/devops-challenge#" k8s/overlays/minikube/kustomization.yaml
+          sed -i -E "s/(newTag: ).*/\\1${{ steps.vars.outputs.tag }}/" k8s/overlays/minikube/kustomization.yaml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add k8s/overlays/minikube/kustomization.yaml
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(gitops): promote image ${{ steps.vars.outputs.tag }}"
+          git push
