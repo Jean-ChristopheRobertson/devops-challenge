@@ -1,0 +1,12 @@
+{
+  "name": "@devops-challenge/prisma-migrator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "prisma migrate deploy"
+  },
+  "dependencies": {
+    "prisma": "7.3.0"
+  }
+}

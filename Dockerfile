@@ -12,17 +12,32 @@ ENV POSTGRES_PRISMA_URL=$POSTGRES_PRISMA_URL
 FROM base AS deps
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./
 COPY prisma/schema.prisma ./prisma/schema.prisma
+COPY prisma/migrator/package.json ./prisma/migrator/package.json
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
-FROM deps AS migrator
+FROM base AS migrator-deps
+COPY pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma/migrator/package.json ./prisma/migrator/package.json
+RUN --mount=type=cache,id=pnpm-migrator-store,target=/pnpm/store \
+    pnpm install --filter @devops-challenge/prisma-migrator --prod --frozen-lockfile
+
+FROM migrator-deps AS migrator-package
+RUN pnpm --filter @devops-challenge/prisma-migrator deploy --legacy --prod /migrator
+
+FROM node:22-alpine AS migrator
+WORKDIR /app/prisma/migrator
+ENV NODE_ENV=production
 
 RUN addgroup -S -g 1001 nextjs && adduser -S -u 1001 -G nextjs nextjs
 
-COPY prisma/migrations ./prisma/migrations
+COPY --from=migrator-package /migrator ./
+COPY prisma/migrator/prisma.config.ts ./prisma.config.ts
+COPY prisma/schema.prisma ../schema.prisma
+COPY prisma/migrations ../migrations
 
 USER nextjs
 
-CMD ["pnpm", "db:migrate:deploy"]
+CMD ["node_modules/.bin/prisma", "migrate", "deploy"]
 
 FROM base AS builder
 COPY package.json ./

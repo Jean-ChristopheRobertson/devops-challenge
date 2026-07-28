@@ -123,6 +123,7 @@ jobs:
           python3 - <<'PY'
           import json
           import os
+          import time
           import urllib.error
           import urllib.parse
           import urllib.request
@@ -130,27 +131,33 @@ jobs:
           owner = os.environ["GHCR_OWNER"].lower()
           tag = os.environ["IMAGE_TAG"]
           accept = "application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json"
+          attempts = 10
 
           for image in ("devops-challenge", "devops-challenge-migrate"):
-              scope = f"repository:{owner}/{image}:pull"
-              token_url = "https://ghcr.io/token?" + urllib.parse.urlencode({"service": "ghcr.io", "scope": scope})
-              with urllib.request.urlopen(token_url) as response:
-                  token = json.load(response)["token"]
+              for attempt in range(1, attempts + 1):
+                  try:
+                      scope = f"repository:{owner}/{image}:pull"
+                      token_url = "https://ghcr.io/token?" + urllib.parse.urlencode({"service": "ghcr.io", "scope": scope})
+                      with urllib.request.urlopen(token_url) as response:
+                          token = json.load(response)["token"]
 
-              request = urllib.request.Request(
-                  f"https://ghcr.io/v2/{owner}/{image}/manifests/{tag}",
-                  method="HEAD",
-                  headers={"Accept": accept, "Authorization": f"Bearer {token}"},
-              )
-              try:
-                  with urllib.request.urlopen(request) as response:
-                      if response.status != 200:
-                          raise RuntimeError(f"unexpected status {response.status}")
-              except urllib.error.HTTPError as error:
-                  raise SystemExit(
-                      f"Anonymous pull failed for ghcr.io/{owner}/{image}:{tag} ({error.code}). "
-                      "Set the container package visibility to public in GitHub Packages."
-                  ) from error
+                      request = urllib.request.Request(
+                          f"https://ghcr.io/v2/{owner}/{image}/manifests/{tag}",
+                          method="HEAD",
+                          headers={"Accept": accept, "Authorization": f"Bearer {token}"},
+                      )
+                      with urllib.request.urlopen(request) as response:
+                          if response.status != 200:
+                              raise RuntimeError(f"unexpected status {response.status}")
 
-              print(f"Anonymous pull verified: ghcr.io/{owner}/{image}:{tag}")
+                      print(f"Anonymous pull verified: ghcr.io/{owner}/{image}:{tag}")
+                      break
+                  except (urllib.error.HTTPError, urllib.error.URLError, RuntimeError, KeyError) as error:
+                      if attempt == attempts:
+                          raise SystemExit(
+                              f"Anonymous pull failed for ghcr.io/{owner}/{image}:{tag} after {attempts} attempts. "
+                              "Set the container package visibility to public in GitHub Packages."
+                          ) from error
+                      print(f"Anonymous pull not yet available for {image} ({error}); retrying in 15 seconds")
+                      time.sleep(15)
           PY

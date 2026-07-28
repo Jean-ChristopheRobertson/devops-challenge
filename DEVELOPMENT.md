@@ -67,7 +67,8 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 ├── prisma/
 │   ├── schema.prisma     # Database schema
 │   ├── generated/        # Generated Prisma client (gitignored)
-│   └── migrations/       # SQL migrations
+│   ├── migrations/       # SQL migrations
+│   └── migrator/         # Minimal workspace used by the migration image
 ├── prisma.config.ts      # Prisma configuration
 ├── docker-compose.yaml   # PostgreSQL + Next.js services
 └── Dockerfile            # Production application and Prisma migration containers
@@ -111,6 +112,8 @@ docker compose up -d
 ```
 
 The Kubernetes deployment runs committed migrations through the dedicated
-`migrator` Docker target with `prisma migrate deploy`. The Minikube overlay
-supplies local-only PostgreSQL credentials; replace it with managed secret
-delivery outside local development.
+`migrator` Docker target with `prisma migrate deploy`. Its focused
+`prisma/migrator` workspace contains only the Prisma CLI and avoids copying the
+application's development dependencies into the migration image. The Minikube
+overlay supplies local-only PostgreSQL credentials; replace it with managed
+secret delivery outside local development.
