@@ -81,7 +81,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/devops-challenge
           tags: |
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=raw,value=latest
 
       - name: Extract migration image metadata
@@ -91,7 +91,7 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository_owner }}/devops-challenge-migrate
           tags: |
-            type=sha,prefix=sha-
+            type=sha,prefix=sha-,format=long
             type=raw,value=latest
 
       - name: Build and push application image
