@@ -7,10 +7,10 @@ resources:
 images:
   - name: ghcr.io/moonpay/devops-challenge
     newName: ghcr.io/jean-christopherobertson/devops-challenge
-    newTag: sha-949033b414bb67a6b058c2432a8bcde4aaaf232f
+    newTag: sha-381a3367a07ab29074b175e5b6e7dae3ccb1def1
   - name: ghcr.io/moonpay/devops-challenge-migrate
     newName: ghcr.io/jean-christopherobertson/devops-challenge-migrate
-    newTag: sha-949033b414bb67a6b058c2432a8bcde4aaaf232f
+    newTag: sha-381a3367a07ab29074b175e5b6e7dae3ccb1def1
 patches:
   - target:
       kind: Ingress
