@@ -42,14 +42,15 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development server with Turbopack |
-| `pnpm build` | Build for production |
-| `pnpm start` | Start production server |
-| `pnpm db:migrate` | Run database migrations |
-| `pnpm db:push` | Push schema changes (no migration) |
-| `pnpm db:studio` | Open Prisma Studio GUI |
+| Command                  | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| `pnpm dev`               | Start development server with Turbopack                     |
+| `pnpm build`             | Build for production                                        |
+| `pnpm start`             | Start production server                                     |
+| `pnpm db:migrate`        | Run database migrations                                     |
+| `pnpm db:migrate:deploy` | Apply committed migrations without creating a new migration |
+| `pnpm db:push`           | Push schema changes (no migration)                          |
+| `pnpm db:studio`         | Open Prisma Studio GUI                                      |
 
 ## Project Structure
 
@@ -69,13 +70,13 @@ The app will be available at [http://localhost:3000](http://localhost:3000).
 │   └── migrations/       # SQL migrations
 ├── prisma.config.ts      # Prisma configuration
 ├── docker-compose.yaml   # PostgreSQL + Next.js services
-└── Dockerfile            # Production container (you need to create this)
+└── Dockerfile            # Production application and Prisma migration containers
 ```
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
+| Variable              | Description                  |
+| --------------------- | ---------------------------- |
 | `POSTGRES_PRISMA_URL` | PostgreSQL connection string |
 
 Example: `postgres://postgres:postgres@localhost:5432/currencies?schema=public`
@@ -105,6 +106,11 @@ This project uses Prisma 7's driver adapter architecture with `node-postgres` fo
 # Start PostgreSQL only
 docker compose up -d postgres
 
-# Start full stack (requires Dockerfile)
+# Start full stack
 docker compose up -d
 ```
+
+The Kubernetes deployment runs committed migrations through the dedicated
+`migrator` Docker target with `prisma migrate deploy`. The Minikube overlay
+supplies local-only PostgreSQL credentials; replace it with managed secret
+delivery outside local development.

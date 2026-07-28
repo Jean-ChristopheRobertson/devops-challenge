@@ -11,3 +11,4 @@ resources:
   - pdb.yaml
   - networkpolicy.yaml
   - postgres.yaml
+  - migrate-job.yaml

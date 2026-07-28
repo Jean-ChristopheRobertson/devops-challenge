@@ -29,17 +29,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Unit tests
-        run: pnpm test
-
-      - name: Security scan
-        run: pnpm audit --prod --audit-level high
+      - name: CI
+        run: pnpm ci:verify
 
   build-and-publish:
     runs-on: ubuntu-latest
@@ -62,7 +53,11 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm cd:build
+
+      - name: Build container images
+        if: github.event_name == 'pull_request'
+        run: pnpm ci:image
 
       - name: Login to GHCR
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -72,9 +67,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract image metadata
+      - name: Extract application image metadata
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        id: meta
+        id: application-meta
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository_owner }}/devops-challenge
@@ -82,11 +77,73 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest
 
-      - name: Build and push image
+      - name: Extract migration image metadata
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: migration-meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/devops-challenge-migrate
+          tags: |
+            type=sha,prefix=sha-
+            type=raw,value=latest
+
+      - name: Build and push application image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: runner
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.application-meta.outputs.tags }}
+          labels: ${{ steps.application-meta.outputs.labels }}
+
+      - name: Build and push migration image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: migrator
+          push: true
+          tags: ${{ steps.migration-meta.outputs.tags }}
+          labels: ${{ steps.migration-meta.outputs.labels }}
+
+      - name: Verify public GHCR image access
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GHCR_OWNER: ${{ github.repository_owner }}
+          IMAGE_TAG: sha-${{ github.sha }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          owner = os.environ["GHCR_OWNER"].lower()
+          tag = os.environ["IMAGE_TAG"]
+          accept = "application/vnd.oci.image.index.v1+json, application/vnd.docker.distribution.manifest.v2+json"
+
+          for image in ("devops-challenge", "devops-challenge-migrate"):
+              scope = f"repository:{owner}/{image}:pull"
+              token_url = "https://ghcr.io/token?" + urllib.parse.urlencode({"service": "ghcr.io", "scope": scope})
+              with urllib.request.urlopen(token_url) as response:
+                  token = json.load(response)["token"]
+
+              request = urllib.request.Request(
+                  f"https://ghcr.io/v2/{owner}/{image}/manifests/{tag}",
+                  method="HEAD",
+                  headers={"Accept": accept, "Authorization": f"Bearer {token}"},
+              )
+              try:
+                  with urllib.request.urlopen(request) as response:
+                      if response.status != 200:
+                          raise RuntimeError(f"unexpected status {response.status}")
+              except urllib.error.HTTPError as error:
+                  raise SystemExit(
+                      f"Anonymous pull failed for ghcr.io/{owner}/{image}:{tag} ({error.code}). "
+                      "Set the container package visibility to public in GitHub Packages."
+                  ) from error
+
+              print(f"Anonymous pull verified: ghcr.io/{owner}/{image}:{tag}")
+          PY

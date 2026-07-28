@@ -14,6 +14,16 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml prisma.config.ts ./
 COPY prisma/schema.prisma ./prisma/schema.prisma
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
+FROM deps AS migrator
+
+RUN addgroup -S -g 1001 nextjs && adduser -S -u 1001 -G nextjs nextjs
+
+COPY prisma/migrations ./prisma/migrations
+
+USER nextjs
+
+CMD ["pnpm", "db:migrate:deploy"]
+
 FROM base AS builder
 COPY package.json ./
 COPY prisma.config.ts ./
@@ -32,7 +42,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
 
-RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
+RUN addgroup -S -g 1001 nextjs && adduser -S -u 1001 -G nextjs nextjs
 
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./

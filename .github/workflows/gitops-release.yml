@@ -25,10 +25,26 @@ jobs:
         id: vars
         run: echo "tag=sha-${{ github.event.workflow_run.head_sha }}" >> "$GITHUB_OUTPUT"
 
-      - name: Update kustomize image tag
+      - name: Update Kustomize image names and tags
         run: |
-          sed -i -E "s#(name: ).*#\\1ghcr.io/${{ github.repository_owner }}/devops-challenge#" k8s/overlays/minikube/kustomization.yaml
-          sed -i -E "s/(newTag: ).*/\\1${{ steps.vars.outputs.tag }}/" k8s/overlays/minikube/kustomization.yaml
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path("k8s/overlays/minikube/kustomization.yaml")
+          content = path.read_text()
+          owner = "${{ github.repository_owner }}".lower()
+          tag = "${{ steps.vars.outputs.tag }}"
+
+          for image in ("devops-challenge", "devops-challenge-migrate"):
+              pattern = rf"(  - name: ghcr\.io/moonpay/{image}\n    newName: )ghcr\.io/[^/]+/{image}(\n    newTag: ).*"
+              replacement = rf"\1ghcr.io/{owner}/{image}\2{tag}"
+              content, count = re.subn(pattern, replacement, content)
+              if count != 1:
+                  raise SystemExit(f"Expected exactly one image entry for {image}, found {count}")
+
+          path.write_text(content)
+          PY
 
       - name: Commit and push
         run: |

@@ -4,17 +4,63 @@ metadata:
   name: prisma-migrate
   namespace: devops-challenge
   annotations:
-    argocd.argoproj.io/hook: PreSync
-    argocd.argoproj.io/hook-delete-policy: HookSucceeded
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation,HookSucceeded
+    argocd.argoproj.io/sync-wave: '1'
 spec:
+  backoffLimit: 12
+  activeDeadlineSeconds: 600
+  ttlSecondsAfterFinished: 300
   template:
+    metadata:
+      labels:
+        app: prisma-migrate
     spec:
       restartPolicy: OnFailure
+      automountServiceAccountToken: false
+      securityContext:
+        fsGroup: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.37.0
+          command: ['sh', '-ec']
+          args:
+            - until nc -z -w 2 postgres 5432; do echo 'Waiting for PostgreSQL'; sleep 2; done
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            capabilities:
+              drop: ['ALL']
       containers:
         - name: migrate
-          image: ghcr.io/moonpay/devops-challenge:latest
+          image: ghcr.io/moonpay/devops-challenge-migrate:latest
           imagePullPolicy: IfNotPresent
-          command: ['pnpm', 'db:migrate']
           envFrom:
             - secretRef:
                 name: app-secrets
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            capabilities:
+              drop: ['ALL']
+      volumes:
+        - name: tmp
+          emptyDir: {}

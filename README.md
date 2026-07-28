@@ -57,7 +57,7 @@ This repository now includes a deployment skeleton based on:
 
 ### Included Structure
 
-- `Dockerfile`: multi-stage Next.js production image.
+- `Dockerfile`: multi-stage Next.js production image plus a dedicated Prisma migration target.
 - `k8s/base`: app manifests (deployment, service, ingress, hpa, pdb, network policy, local postgres, migration job).
 - `k8s/overlays/minikube`: Minikube-specific kustomize overlay.
 - `argocd/applications/devops-challenge.yaml`: Argo CD Application definition.
@@ -83,11 +83,28 @@ minikube tunnel
 # Then browse host configured in k8s/overlays/minikube/kustomization.yaml
 ```
 
+### Local Pipeline Commands
+
+Use these commands to mirror a Jenkins-style flow locally while keeping the CI/CD boundary explicit:
+
+```bash
+pnpm ci        # verify -> build -> application and migration images
+pnpm ci:verify # lint, typecheck, unit tests, audit
+pnpm ci:build  # Next.js production build
+pnpm ci:image  # docker build of the app and Prisma migration images
+pnpm cd        # deploy -> smoke
+pnpm cd:deploy # load image into Minikube and apply manifests
+pnpm cd:smoke  # HTTP smoke test against the Minikube ingress
+pnpm ci:all    # verify -> build -> application and migration images
+pnpm cd:all    # deploy -> smoke
+pnpm pipeline:all # verify -> build -> image -> deploy -> smoke
+```
+
 ### Important Notes
 
-1. `argocd/applications/devops-challenge.yaml` intentionally contains a placeholder repository URL. Set it to your fork before running end-to-end.
+1. Argo CD reconciles the public fork at `https://github.com/Jean-ChristopheRobertson/devops-challenge.git`.
 2. `k8s/overlays/minikube/secret.yaml` is intentionally plaintext for local demo only. Replace with sealed/external secret management for real production.
-3. CI publishes image `ghcr.io/<owner>/devops-challenge`; ensure package permissions are enabled for your repository.
-4. The Prisma migration job file exists as a skeleton at `k8s/base/migrate-job.yaml` and is not enabled by default in `k8s/base/kustomization.yaml`.
+3. CI publishes public `ghcr.io/jean-christopherrobertson/devops-challenge` and `ghcr.io/jean-christopherrobertson/devops-challenge-migrate` images. Public images need no Kubernetes image-pull secret; set each package visibility to public after its first successful release.
+4. The Prisma migration job is enabled as an Argo CD `Sync` hook. It waits for the local PostgreSQL Service, runs `prisma migrate deploy` from the dedicated migration image, and completes before the web Deployment sync wave.
 
 Good luck! :four_leaf_clover:

@@ -1,6 +1,6 @@
 import { Prisma } from "@/prisma/generated/client";
 import Image from "next/image";
-import { formatEuroPrice } from "../lib/format-currency.js";
+import { formatEuroPrice } from "../lib/format-currency";
 
 type Props = {
   currencies: Prisma.currenciesGetPayload<{
@@ -14,16 +14,13 @@ type Props = {
 };
 
 export default async function Table({ currencies }: Props) {
-  const startTime = Date.now();
-  const duration = Date.now() - startTime;
-
   return (
     <div className="bg-white/30 p-12 shadow-xl ring-1 ring-gray-900/5 rounded-lg backdrop-blur-lg max-w-xl mx-auto w-full">
       <div className="flex justify-between items-center mb-4">
         <div className="space-y-1">
           <h2 className="text-xl font-medium">Recent Currencies</h2>
           <p className="text-sm text-gray-500">
-            Fetched {currencies.length} currencies in {duration}ms
+            Fetched {currencies.length} currencies
           </p>
         </div>
       </div>

@@ -6,6 +6,10 @@ resources:
   - secret.yaml
 images:
   - name: ghcr.io/moonpay/devops-challenge
+    newName: ghcr.io/moonpay/devops-challenge
+    newTag: latest
+  - name: ghcr.io/moonpay/devops-challenge-migrate
+    newName: ghcr.io/moonpay/devops-challenge-migrate
     newTag: latest
 patches:
   - target:

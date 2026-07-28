@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: web
   namespace: devops-challenge
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
   labels:
     app: web
 spec:

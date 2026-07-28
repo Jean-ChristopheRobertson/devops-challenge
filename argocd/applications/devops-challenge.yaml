@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/REPLACE_WITH_YOUR_USER_OR_ORG/devops-challenge.git
+    repoURL: https://github.com/Jean-ChristopheRobertson/devops-challenge.git
     targetRevision: main
     path: k8s/overlays/minikube
   destination:
