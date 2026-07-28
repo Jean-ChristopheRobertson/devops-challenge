@@ -55,5 +55,5 @@ jobs:
             echo "No changes to commit"
             exit 0
           fi
-          git commit -m "chore(gitops): promote image ${{ steps.vars.outputs.tag }}"
+          git commit -m "chore(gitops): promote image ${{ steps.vars.outputs.tag }} [skip ci]"
           git push
