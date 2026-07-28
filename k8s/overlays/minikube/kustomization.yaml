@@ -6,11 +6,11 @@ resources:
   - secret.yaml
 images:
   - name: ghcr.io/moonpay/devops-challenge
-    newName: ghcr.io/moonpay/devops-challenge
-    newTag: latest
+    newName: ghcr.io/jean-christopherobertson/devops-challenge
+    newTag: sha-949033b414bb67a6b058c2432a8bcde4aaaf232f
   - name: ghcr.io/moonpay/devops-challenge-migrate
-    newName: ghcr.io/moonpay/devops-challenge-migrate
-    newTag: latest
+    newName: ghcr.io/jean-christopherobertson/devops-challenge-migrate
+    newTag: sha-949033b414bb67a6b058c2432a8bcde4aaaf232f
 patches:
   - target:
       kind: Ingress
