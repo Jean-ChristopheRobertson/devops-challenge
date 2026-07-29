@@ -1,10 +1,33 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: local-selfsigned
+  name: local-ca-bootstrap
   namespace: devops-challenge
 spec:
   selfSigned: {}
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: local-ca
+  namespace: devops-challenge
+spec:
+  isCA: true
+  commonName: devops-challenge-local-ca
+  secretName: local-ca-key-pair
+  duration: 8760h
+  issuerRef:
+    name: local-ca-bootstrap
+    kind: Issuer
+---
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: local-ca
+  namespace: devops-challenge
+spec:
+  ca:
+    secretName: local-ca-key-pair
 ---
 apiVersion: cert-manager.io/v1
 kind: Certificate
@@ -13,8 +36,10 @@ metadata:
   namespace: devops-challenge
 spec:
   secretName: web-tls
+  duration: 2160h
+  renewBefore: 360h
   issuerRef:
-    name: local-selfsigned
+    name: local-ca
     kind: Issuer
   dnsNames:
     - devops-challenge.127.0.0.1.nip.io
