@@ -21,8 +21,10 @@ The original containerization and Minikube deployment tasks are complete. This l
 
 ## 4. Add observability and alerting
 
-- **Status:** In progress.
-- **Implementation:** Prometheus, Grafana, Alertmanager, blackbox probing, PostgreSQL exporter, application dashboard, and Prometheus alert rules are being added.
+- **Status:** Complete.
+- **Delivered:** Prometheus, Grafana, Alertmanager, blackbox probing, PostgreSQL exporter, application dashboard, and Prometheus alert rules.
+- **Validated:** Prometheus collects PostgreSQL connections, blackbox web availability, and Deployment replica metrics; Grafana discovers the labeled dashboard; alert groups load successfully; the application smoke test passes.
+- **Operational notes:** Kubernetes container logs remain available through `kubectl logs`; add centralized long-term log storage and an external alert receiver when selecting a production platform.
 - **Done when:** application, Kubernetes, database, and ingress signals are collected; dashboards and actionable alerts cover availability, latency, errors, saturation, deployment failures, and database health.
 
 ## 5. Publish the operational runbook
