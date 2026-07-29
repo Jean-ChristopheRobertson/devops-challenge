@@ -47,11 +47,11 @@ spec:
   prober:
     url: prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
     path: /probe
-  module: http_2xx
+  module: local_https
   targets:
     staticConfig:
       static:
-        - https://web.devops-challenge.svc.cluster.local/
+        - https://ingress-nginx-controller.ingress-nginx.svc.cluster.local/
       labels:
         app: web
         component: https-availability

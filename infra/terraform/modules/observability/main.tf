@@ -43,5 +43,26 @@ resource "helm_release" "blackbox_exporter" {
   wait             = true
   timeout          = 300
 
+  values = [yamlencode({
+    config = {
+      modules = {
+        local_https = {
+          prober  = "http"
+          timeout = "5s"
+          http = {
+            valid_http_versions = ["HTTP/1.1", "HTTP/2.0"]
+            preferred_ip_protocol = "ip4"
+            tls_config = {
+              insecure_skip_verify = true
+            }
+            headers = {
+              Host = "devops-challenge.127.0.0.1.nip.io"
+            }
+          }
+        }
+      }
+    }
+  })]
+
   depends_on = [helm_release.kube_prometheus_stack]
 }
