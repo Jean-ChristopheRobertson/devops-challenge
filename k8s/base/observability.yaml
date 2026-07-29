@@ -1,0 +1,143 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: postgres
+  namespace: devops-challenge
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  endpoints:
+    - port: metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: web-availability
+  namespace: devops-challenge
+  labels:
+    release: kube-prometheus-stack
+spec:
+  interval: 30s
+  prober:
+    url: prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    path: /probe
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+        - http://web.devops-challenge.svc.cluster.local/
+      labels:
+        app: web
+        component: availability
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: devops-challenge
+  namespace: devops-challenge
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: devops-challenge.availability
+      rules:
+        - alert: WebAvailabilityProbeFailed
+          expr: probe_success{app="web",component="availability"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: web
+          annotations:
+            summary: Web availability probe is failing
+            description: The blackbox probe has failed for five minutes. Check ingress, web pods, and database connectivity.
+        - alert: WebAvailabilityProbeSlow
+          expr: probe_duration_seconds{app="web",component="availability"} > 1
+          for: 10m
+          labels:
+            severity: warning
+            service: web
+          annotations:
+            summary: Web availability probe is slow
+            description: The web service probe has exceeded one second for ten minutes.
+    - name: devops-challenge.workloads
+      rules:
+        - alert: WebDeploymentUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="devops-challenge",deployment="web"} < 2
+          for: 10m
+          labels:
+            severity: critical
+            service: web
+          annotations:
+            summary: Web deployment has fewer than two available replicas
+            description: Check deployment rollout, image pulls, probes, and resource pressure.
+        - alert: PostgresExporterDown
+          expr: pg_up{namespace="devops-challenge"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: postgres
+          annotations:
+            summary: PostgreSQL exporter cannot query the database
+            description: Check PostgreSQL readiness, credentials, storage, and database saturation.
+        - alert: PostgresConnectionsHigh
+          expr: pg_stat_database_numbackends{datname="currencies"} / pg_settings_max_connections > 0.8
+          for: 10m
+          labels:
+            severity: warning
+            service: postgres
+          annotations:
+            summary: PostgreSQL connection saturation is above 80 percent
+            description: Investigate connection pooling, stuck clients, and capacity before connection exhaustion.
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: devops-challenge-dashboard
+  namespace: monitoring
+  labels:
+    grafana_dashboard: '1'
+data:
+  devops-challenge.json: |
+    {
+      "title": "DevOps Challenge Service Health",
+      "uid": "devops-challenge-health",
+      "schemaVersion": 39,
+      "version": 1,
+      "panels": [
+        {
+          "type": "stat",
+          "title": "Web probe success",
+          "targets": [{"expr": "probe_success{app=\"web\",component=\"availability\"}"}],
+          "gridPos": {"h": 8, "w": 6, "x": 0, "y": 0}
+        },
+        {
+          "type": "timeseries",
+          "title": "Web probe latency",
+          "targets": [{"expr": "probe_duration_seconds{app=\"web\",component=\"availability\"}"}],
+          "gridPos": {"h": 8, "w": 9, "x": 6, "y": 0}
+        },
+        {
+          "type": "stat",
+          "title": "Available web replicas",
+          "targets": [{"expr": "kube_deployment_status_replicas_available{namespace=\"devops-challenge\",deployment=\"web\"}"}],
+          "gridPos": {"h": 8, "w": 6, "x": 15, "y": 0}
+        },
+        {
+          "type": "timeseries",
+          "title": "PostgreSQL connections",
+          "targets": [{"expr": "pg_stat_database_numbackends{datname=\"currencies\"}"}],
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+        },
+        {
+          "type": "stat",
+          "title": "PostgreSQL up",
+          "targets": [{"expr": "pg_up{namespace=\"devops-challenge\"}"}],
+          "gridPos": {"h": 8, "w": 6, "x": 12, "y": 8}
+        }
+      ]
+    }

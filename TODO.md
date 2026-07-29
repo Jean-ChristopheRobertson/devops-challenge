@@ -21,7 +21,8 @@ The original containerization and Minikube deployment tasks are complete. This l
 
 ## 4. Add observability and alerting
 
-- **Status:** Not started.
+- **Status:** In progress.
+- **Implementation:** Prometheus, Grafana, Alertmanager, blackbox probing, PostgreSQL exporter, application dashboard, and Prometheus alert rules are being added.
 - **Done when:** application, Kubernetes, database, and ingress signals are collected; dashboards and actionable alerts cover availability, latency, errors, saturation, deployment failures, and database health.
 
 ## 5. Publish the operational runbook

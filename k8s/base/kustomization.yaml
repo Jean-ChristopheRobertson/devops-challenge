@@ -12,3 +12,4 @@ resources:
   - networkpolicy.yaml
   - postgres.yaml
   - migrate-job.yaml
+  - observability.yaml

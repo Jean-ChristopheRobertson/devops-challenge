@@ -28,6 +28,13 @@ spec:
       ports:
         - protocol: TCP
           port: 3000
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - protocol: TCP
+          port: 3000
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
@@ -48,9 +55,14 @@ spec:
         - podSelector:
             matchLabels:
               app: prisma-migrate
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
       ports:
         - protocol: TCP
           port: 5432
+        - protocol: TCP
+          port: 9187
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
