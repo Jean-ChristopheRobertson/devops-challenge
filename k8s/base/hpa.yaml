@@ -3,6 +3,8 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: web
   namespace: devops-challenge
+  annotations:
+    argocd.argoproj.io/sync-wave: '3'
 spec:
   scaleTargetRef:
     apiVersion: apps/v1

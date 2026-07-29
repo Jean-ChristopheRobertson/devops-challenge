@@ -3,5 +3,5 @@ include "root" {
 }
 
 terraform {
-  source = "../../terraform/environments/minikube"
+  source = "${get_terragrunt_dir()}/../../..//infra/terraform/environments/minikube"
 }
