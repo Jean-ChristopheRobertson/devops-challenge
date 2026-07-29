@@ -19,3 +19,6 @@ patches:
       - op: replace
         path: /spec/rules/0/host
         value: devops-challenge.127.0.0.1.nip.io
+      - op: replace
+        path: /spec/tls/0/hosts/0
+        value: devops-challenge.127.0.0.1.nip.io

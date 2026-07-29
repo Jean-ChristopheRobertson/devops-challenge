@@ -13,3 +13,4 @@ resources:
   - postgres.yaml
   - migrate-job.yaml
   - observability.yaml
+  - tls.yaml

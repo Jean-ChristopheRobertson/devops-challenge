@@ -11,13 +11,15 @@ The original containerization and Minikube deployment tasks are complete. This l
 
 ## 2. Move production PostgreSQL to a managed service
 
-- **Status:** Not started.
+- **Status:** Deferred — local-only scope.
+- **Scope decision:** retain the in-cluster PostgreSQL Deployment for Minikube; do not introduce a cloud database or paid provider for this local demonstration.
 - **Done when:** production configuration targets a managed PostgreSQL service with private networking, backup/PITR, encryption, monitoring, rotation, and a documented migration/cutover plan. The in-cluster PostgreSQL workload remains explicitly local-demo only.
 
 ## 3. Add production DNS and TLS
 
-- **Status:** Not started.
-- **Done when:** ingress uses a real managed DNS name, cert-manager issues and renews TLS certificates, HTTP redirects to HTTPS, and certificate/ingress readiness are verified.
+- **Status:** In progress — local TLS scope.
+- **Implementation:** cert-manager, a namespace-local self-signed issuer, a certificate for the Minikube `nip.io` hostname, and ingress HTTP-to-HTTPS redirection.
+- **Local limitation:** the self-signed certificate is intentionally not publicly trusted. A public environment requires managed DNS plus a publicly trusted ACME issuer.
 
 ## 4. Add observability and alerting
 

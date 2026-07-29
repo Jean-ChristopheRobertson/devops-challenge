@@ -47,9 +47,13 @@ module "observability" {
   source = "../../modules/observability"
 }
 
+module "cert_manager" {
+  source = "../../modules/cert_manager"
+}
+
 module "gitops_app" {
   source                    = "../../modules/gitops_app"
   application_manifest_path = "${path.module}/../../../../argocd/applications/devops-challenge.yaml"
 
-  depends_on = [module.argocd, module.sealed_secrets, module.observability]
+  depends_on = [module.argocd, module.sealed_secrets, module.observability, module.cert_manager]
 }

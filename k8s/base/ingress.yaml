@@ -4,9 +4,13 @@ metadata:
   name: web
   namespace: devops-challenge
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: 'false'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - devops-challenge.local
+      secretName: web-tls
   rules:
     - host: devops-challenge.local
       http:
