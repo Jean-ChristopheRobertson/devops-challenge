@@ -39,9 +39,13 @@ module "argocd" {
   source = "../../modules/argocd"
 }
 
+module "sealed_secrets" {
+  source = "../../modules/sealed_secrets"
+}
+
 module "gitops_app" {
   source                    = "../../modules/gitops_app"
   application_manifest_path = "${path.module}/../../../../argocd/applications/devops-challenge.yaml"
 
-  depends_on = [module.argocd]
+  depends_on = [module.argocd, module.sealed_secrets]
 }

@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: devops-challenge
 resources:
   - ../../base
-  - secret.yaml
+  - sealed-secret.yaml
 images:
   - name: ghcr.io/moonpay/devops-challenge
     newName: ghcr.io/jean-christopherobertson/devops-challenge
