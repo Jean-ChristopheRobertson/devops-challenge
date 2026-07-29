@@ -36,6 +36,27 @@ spec:
         component: availability
 ---
 apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: web-https-availability
+  namespace: devops-challenge
+  labels:
+    release: kube-prometheus-stack
+spec:
+  interval: 30s
+  prober:
+    url: prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115
+    path: /probe
+  module: http_2xx
+  targets:
+    staticConfig:
+      static:
+        - https://web.devops-challenge.svc.cluster.local/
+      labels:
+        app: web
+        component: https-availability
+---
+apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: devops-challenge
@@ -64,6 +85,15 @@ spec:
           annotations:
             summary: Web availability probe is slow
             description: The web service probe has exceeded one second for ten minutes.
+        - alert: WebHttpsAvailabilityProbeFailed
+          expr: probe_success{app="web",component="https-availability"} == 0
+          for: 5m
+          labels:
+            severity: critical
+            service: web
+          annotations:
+            summary: Web HTTPS availability probe is failing
+            description: The HTTPS endpoint has failed for five minutes. Check the TLS certificate, ingress configuration, and web workload.
     - name: devops-challenge.workloads
       rules:
         - alert: WebDeploymentUnavailable

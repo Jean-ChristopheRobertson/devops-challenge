@@ -17,8 +17,9 @@ The original containerization and Minikube deployment tasks are complete. This l
 
 ## 3. Add production DNS and TLS
 
-- **Status:** In progress — local TLS scope.
-- **Implementation:** cert-manager, a namespace-local self-signed issuer, a certificate for the Minikube `nip.io` hostname, and ingress HTTP-to-HTTPS redirection.
+- **Status:** Complete — local TLS scope.
+- **Delivered:** cert-manager, a namespace-local self-signed issuer, a certificate for the Minikube `nip.io` hostname, enforced ingress HTTP-to-HTTPS redirection, and HTTPS availability monitoring.
+- **Validated:** certificate is Ready, the TLS Secret is `kubernetes.io/tls`, HTTP returns `308` to HTTPS, and HTTPS returns `200`.
 - **Local limitation:** the self-signed certificate is intentionally not publicly trusted. A public environment requires managed DNS plus a publicly trusted ACME issuer.
 
 ## 4. Add observability and alerting
