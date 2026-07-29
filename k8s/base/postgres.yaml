@@ -120,6 +120,8 @@ kind: Service
 metadata:
   name: postgres
   namespace: devops-challenge
+  labels:
+    app: postgres
 spec:
   selector:
     app: postgres

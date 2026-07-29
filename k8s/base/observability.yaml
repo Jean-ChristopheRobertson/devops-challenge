@@ -76,7 +76,7 @@ spec:
             summary: Web deployment has fewer than two available replicas
             description: Check deployment rollout, image pulls, probes, and resource pressure.
         - alert: PostgresExporterDown
-          expr: pg_up{namespace="devops-challenge"} == 0
+          expr: absent(pg_postmaster_start_time_seconds{namespace="devops-challenge"}) == 1
           for: 5m
           labels:
             severity: critical
